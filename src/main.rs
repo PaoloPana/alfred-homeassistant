@@ -67,11 +67,11 @@ async fn set_state_handler(client: &Client, message: &Message) -> Result<(String
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     env_logger::init();
-    let mut module = InterfaceModule::new(MODULE_NAME.to_string()).await.expect("An error occurred while fetching the module");
-    module.listen(MODULE_NAME.to_string()).await.expect("An error occurred while listening");
-    let base_url = module.config.get_module_value("url".to_string()).expect("Missing home assistant url");
+    let mut module = InterfaceModule::new(MODULE_NAME).await.expect("An error occurred while fetching the module");
+    module.listen(MODULE_NAME).await.expect("An error occurred while listening");
+    let base_url = module.config.get_module_value("url").expect("Missing home assistant url");
 
-    let token = module.config.get_module_value("token".to_string()).expect("Missing home assistant token");
+    let token = module.config.get_module_value("token").expect("Missing home assistant token");
 
     let client = Client::new(&*base_url, &*token).expect("An error occurred while creating the client");
     loop {
@@ -85,7 +85,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             }
         };
         if let Ok((response_topic, reply)) = res {
-            module.send(response_topic, &reply).await.expect("An error occurred while sending a reply");
+            module.send(&response_topic, &reply).await.expect("An error occurred while sending a reply");
         }
     }
 }
