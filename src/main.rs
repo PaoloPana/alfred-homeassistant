@@ -5,10 +5,11 @@ use alfred_rs::log::{error, warn};
 use alfred_rs::message::{Message, MessageType};
 use alfred_rs::tokio;
 use home_assistant_rest::{Client, StateEnum};
-use home_assistant_rest::post::StateParams;
+use home_assistant_rest::post::CallServiceParams;
+use serde_json::json;
 
 const MODULE_NAME: &'static str = "homeassistant";
-const SET_STATE_TOPIC: &'static str = "homeassistant.set_state";
+const POST_SERVICE_TOPIC: &'static str = "homeassistant.post_service";
 const GET_STATE_TOPIC: &'static str = "homeassistant.get_state";
 
 fn state_to_string(state: StateEnum) -> String {
@@ -33,35 +34,29 @@ async fn get_state_handler(client: &Client, message: &Message) -> Result<(String
     }
 }
 
-async fn set_state_handler(client: &Client, message: &Message) -> Result<(String, Message), Box<dyn Error>> {
+async fn post_service_handler(client: &Client, message: &Message) -> Result<(String, Message), Box<dyn Error>> {
     let split = message.text.split(" ").collect::<Vec<&str>>();
-    if split.len() != 2 {
+    if split.len() != 3 {
         let err_msg = format!("Wrong format: {}", message.text);
         error!("{}", err_msg);
         return Err(err_msg.into());
     }
-    let entity_id = split[0].to_string();
-    let state = split[1].to_string();
-    let get_entity_response = client.get_states_of_entity(&*entity_id).await;
-    if let Err(error) = get_entity_response {
-        let err_msg = format!("An error occurred while fetching the entity ({}): {}", entity_id, error);
-        error!("{}", err_msg);
-        return Err(err_msg.into());
-    }
-    let entity_response = get_entity_response?;
-    let params = StateParams {
-        entity_id: entity_id.clone(),
-        state,
-        attributes: entity_response.attributes,
-    };
-    match client.post_states(params).await {
-        Ok(response) => Ok(message.reply(state_to_string(response.state.unwrap()), MessageType::TEXT)?),
-        Err(error) => {
-            let err_msg = format!("An error occurred while fetching the entity ({}): {}", entity_id, error);
+    let domain = split[0].to_string();
+    let service = split[1].to_string();
+    let entity_id = split[2].to_string();
+
+    let response = client.post_service(CallServiceParams {
+        domain,
+        service: service.clone(),
+        service_data: Some(json!({"entity_id": entity_id})),
+    }).await;
+    response
+        .map(|_| { message.reply(service, MessageType::TEXT).unwrap() })
+        .map_err(|e| {
+            let err_msg = format!("An error occurred while fetching the entity ({}): {}", entity_id, e);
             error!("{}", err_msg);
-            Err(err_msg.into())
-        }
-    }
+            err_msg.into()
+        })
 }
 
 #[tokio::main]
@@ -77,7 +72,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     loop {
         let (topic, message) = module.receive().await.expect("An error occurred while fetching the module");
         let res = match topic.as_str() {
-            SET_STATE_TOPIC => set_state_handler(&client, &message).await,
+            POST_SERVICE_TOPIC => post_service_handler(&client, &message).await,
             GET_STATE_TOPIC => get_state_handler(&client, &message).await,
             _ => {
                 warn!("Unknown topic: {}", topic);
