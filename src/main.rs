@@ -1,6 +1,6 @@
 use std::error::Error;
 use alfred_rs::connection::{Receiver, Sender};
-use alfred_rs::interface_module::InterfaceModule;
+use alfred_rs::AlfredModule;
 use alfred_rs::log::error;
 use alfred_rs::message::{Message, MessageType};
 use alfred_rs::tokio;
@@ -26,7 +26,7 @@ async fn get_state_handler(client: &Client, message: &Message) -> Result<(String
     let state = client.get_states_of_entity(&*entity_id).await
         .map_err(Into::<Box<dyn Error>>::into)?
         .state.ok_or_else(|| format!("An error occurred while fetching the entity ({entity_id})."))?;
-    message.reply(state_to_string(state), MessageType::TEXT).map_err(Into::into)
+    message.reply(state_to_string(state), MessageType::Text).map_err(Into::into)
 }
 
 async fn post_service_handler(client: &Client, message: &Message) -> Result<(String, Message), Box<dyn Error>> {
@@ -46,13 +46,13 @@ async fn post_service_handler(client: &Client, message: &Message) -> Result<(Str
         service_data: Some(json!({"entity_id": entity_id}))
     }).await
         .map_err(Into::into)
-        .and_then(|_| message.reply(service, MessageType::TEXT).map_err(Into::into))
+        .and_then(|_| message.reply(service, MessageType::Text).map_err(Into::into))
 }
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     env_logger::init();
-    let mut module = InterfaceModule::new(MODULE_NAME).await.expect("An error occurred while fetching the module");
+    let mut module = AlfredModule::new(MODULE_NAME).await.expect("An error occurred while fetching the module");
     module.listen(MODULE_NAME).await.expect("An error occurred while listening");
     let base_url = module.config.get_module_value("url").expect("Missing home assistant url");
 
