@@ -1,5 +1,4 @@
 use std::error::Error;
-use alfred_rs::connection::{Receiver, Sender};
 use alfred_rs::AlfredModule;
 use alfred_rs::log::error;
 use alfred_rs::message::{Message, MessageType};
