@@ -6,5 +6,6 @@ edition = "2021"
 [dependencies]
 alfred-rs = { path = "../alfred-rs" }
 env_logger = "0.11.5"
-home-assistant-rest = { git = "https://github.com/FabioGNR/home-assistant-rest" }
-serde_json = "1.0.128"
+#home-assistant-rest = { git = "https://github.com/FabioGNR/home-assistant-rest" }
+home-assistant-rest = { git = "https://github.com/PaoloPana/home-assistant-rest" }
+serde_json = "1.0"

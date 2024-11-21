@@ -1,6 +1,9 @@
+mod capabilities;
+
 use std::error::Error;
 use alfred_rs::AlfredModule;
-use alfred_rs::log::error;
+use alfred_rs::config::Config;
+use alfred_rs::log::{debug, error};
 use alfred_rs::message::{Message, MessageType};
 use alfred_rs::tokio;
 use home_assistant_rest::{Client, StateEnum};
@@ -48,16 +51,22 @@ async fn post_service_handler(client: &Client, message: &Message) -> Result<(Str
         .and_then(|_| message.reply(service, MessageType::Text).map_err(Into::into))
 }
 
+fn get_client(config: &Config) -> Result<Client, Box<dyn Error>> {
+    let base_url = config.get_module_value("url").expect("Missing home assistant url");
+    let token = config.get_module_value("token").expect("Missing home assistant token");
+    Ok(Client::new(&base_url, &token)?)
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     env_logger::init();
-    let mut module = AlfredModule::new(MODULE_NAME).await.expect("An error occurred while fetching the module");
+    let config = Config::read(Some(MODULE_NAME));
+    let client = get_client(&config)?;
+    let capabilities = capabilities::get(&client).await?;
+    debug!("capabilities: {:#?}", capabilities);
+
+    let mut module = AlfredModule::new_with_details(MODULE_NAME, Some(config), Some(capabilities)).await.expect("An error occurred while fetching the module");
     module.listen(MODULE_NAME).await.expect("An error occurred while listening");
-    let base_url = module.config.get_module_value("url").expect("Missing home assistant url");
-
-    let token = module.config.get_module_value("token").expect("Missing home assistant token");
-
-    let client = Client::new(&base_url, &token).expect("An error occurred while creating the client");
     loop {
         let (topic, message) = module.receive().await.expect("An error occurred while fetching the module");
         let res = match topic.as_str() {
