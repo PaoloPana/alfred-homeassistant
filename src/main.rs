@@ -1,7 +1,7 @@
 mod capabilities;
 
 use std::error::Error;
-use alfred_rs::AlfredModule;
+use alfred_rs::{AlfredModule, ModuleDetailsBuilder};
 use alfred_rs::config::Config;
 use alfred_rs::log::{debug, error};
 use alfred_rs::message::{Message, MessageType};
@@ -65,7 +65,14 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let capabilities = capabilities::get(&client).await?;
     debug!("capabilities: {:#?}", capabilities);
 
-    let mut module = AlfredModule::new_with_details(MODULE_NAME, env!("CARGO_PKG_VERSION"), Some(config), Some(capabilities)).await.expect("An error occurred while fetching the module");
+    let module_details = ModuleDetailsBuilder::new()
+        .module_name(MODULE_NAME)
+        .version(env!("CARGO_PKG_VERSION"))
+        .config(Some(config))
+        .capabilities(capabilities)
+        .build();
+    let mut module = AlfredModule::new_with_details(module_details)
+        .await.expect("An error occurred while fetching the module");
     module.listen(MODULE_NAME).await.expect("An error occurred while listening");
     loop {
         let (topic, message) = module.receive().await.expect("An error occurred while fetching the module");
