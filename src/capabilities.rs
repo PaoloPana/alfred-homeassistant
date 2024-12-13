@@ -5,7 +5,7 @@ use home_assistant_rest::Client;
 
 const ENTITY_TYPES: [&str; 4] = ["alarm_control_panel", "light", "media_player", "remote"];
 
-pub(crate) async fn get(client: &Client) -> Result<HashMap<String, String>, Box<dyn Error>> {
+pub async fn get(client: &Client) -> Result<HashMap<String, String>, Box<dyn Error>> {
     const POST_REQUEST: &str = "homeassistant.post_service:";
     let services = client.get_services().await?.iter()
         .map(|service| {
