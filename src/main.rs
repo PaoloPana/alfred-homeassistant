@@ -65,7 +65,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let capabilities = capabilities::get(&client).await?;
     debug!("capabilities: {:#?}", capabilities);
 
-    let mut module = AlfredModule::new_with_details(MODULE_NAME, Some(config), Some(capabilities)).await.expect("An error occurred while fetching the module");
+    let mut module = AlfredModule::new_with_details(MODULE_NAME, env!("CARGO_PKG_VERSION"), Some(config), Some(capabilities)).await.expect("An error occurred while fetching the module");
     module.listen(MODULE_NAME).await.expect("An error occurred while listening");
     loop {
         let (topic, message) = module.receive().await.expect("An error occurred while fetching the module");
