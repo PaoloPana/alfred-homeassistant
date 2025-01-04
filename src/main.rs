@@ -1,11 +1,11 @@
 mod capabilities;
 
 use std::error::Error;
-use alfred_rs::{AlfredModule, ModuleDetailsBuilder};
-use alfred_rs::config::Config;
-use alfred_rs::log::{debug, error};
-use alfred_rs::message::{Message, MessageType};
-use alfred_rs::tokio;
+use alfred_core::{AlfredModule, ModuleDetailsBuilder};
+use alfred_core::config::Config;
+use alfred_core::log::{debug, error};
+use alfred_core::message::{Message, MessageType};
+use alfred_core::tokio;
 use home_assistant_rest::{Client, StateEnum};
 use home_assistant_rest::post::CallServiceParams;
 use serde_json::json;

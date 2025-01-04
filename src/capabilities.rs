@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 use std::error::Error;
-use alfred_rs::log::debug;
+use alfred_core::log::debug;
 use home_assistant_rest::Client;
 
 const ENTITY_TYPES: [&str; 4] = ["alarm_control_panel", "light", "media_player", "remote"];
