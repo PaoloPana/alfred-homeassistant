@@ -1,11 +1,11 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 use std::error::Error;
 use alfred_core::log::debug;
 use home_assistant_rest::Client;
 
 const ENTITY_TYPES: [&str; 4] = ["alarm_control_panel", "light", "media_player", "remote"];
 
-pub async fn get(client: &Client) -> Result<HashMap<String, String>, Box<dyn Error>> {
+pub async fn get(client: &Client) -> Result<BTreeMap<String, String>, Box<dyn Error>> {
     const POST_REQUEST: &str = "homeassistant.post_service:";
     let services = client.get_services().await?.iter()
         .map(|service| {
@@ -13,7 +13,7 @@ pub async fn get(client: &Client) -> Result<HashMap<String, String>, Box<dyn Err
             (key.clone(), service.description.clone())
         }).collect();
         (service.domain.clone(), vec)
-    }).collect::<HashMap<String, Vec<(String, String)>>>();
+    }).collect::<BTreeMap<String, Vec<(String, String)>>>();
     let map = client.get_states().await?.iter()
         .map(|state| {
             let entity_id = state.entity_id.clone();
@@ -31,8 +31,8 @@ pub async fn get(client: &Client) -> Result<HashMap<String, String>, Box<dyn Err
                         format!("{POST_REQUEST} {entity_type} {service} {}", state.entity_id)
                     )
                 })
-                .collect::<HashMap<String, String>>()
+                .collect::<BTreeMap<String, String>>()
         })
-        .collect::<HashMap<String, String>>();
+        .collect::<BTreeMap<String, String>>();
     Ok(map)
 }
